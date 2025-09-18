@@ -180,40 +180,26 @@ void update_H(double **H, double **WH, double **denominator, int n, int k, doubl
 }
 
 void symnmf(double **H, double **W, int n, int k, int max_iter, double epsilon) {
-    double beta = 0.5;
+    double beta = 0.5, diff = 0.0;
     double **WH = (double **)malloc(n * sizeof(double *));
     double **HTH = (double **)malloc(k * sizeof(double *));
     double **numerator = (double **)malloc(n * sizeof(double *));
     double **denominator = (double **)malloc(n * sizeof(double *));
     double **H_prev = (double **)malloc(n * sizeof(double *));
-    int i, j;
-    int iter;
-    double diff = 0.0;
-
+    int i, j, iter;
     for (i = 0; i < n; i++) {
         WH[i] = (double *)calloc(k, sizeof(double));
         numerator[i] = (double *)calloc(k, sizeof(double));
         denominator[i] = (double *)calloc(k, sizeof(double));
         H_prev[i] = (double *)calloc(k, sizeof(double));
     }
-    for (i = 0; i < k; i++) {
-        HTH[i] = (double *)calloc(k, sizeof(double));
-    }
-
+    for (i = 0; i < k; i++) HTH[i] = (double *)calloc(k, sizeof(double));
     for (iter = 0; iter < max_iter; iter++) {
-        /* Store previous H for convergence check */
-        for (i = 0; i < n; i++) {
-            for (j = 0; j < k; j++) {
-                H_prev[i][j] = H[i][j];
-            }
-        }
-        
+        for (i = 0; i < n; i++) for (j = 0; j < k; j++) H_prev[i][j] = H[i][j];
         compute_WH(W, H, n, k, WH);
         compute_HTH(H, n, k, HTH);
         compute_denominator(H, HTH, n, k, denominator);
         update_H(H, WH, denominator, n, k, beta);
-        
-        /* Simple Frobenius norm convergence check like Yahel's reference */
         diff = 0.0;
         for (i = 0; i < n; i++) {
             for (j = 0; j < k; j++) {
@@ -221,26 +207,13 @@ void symnmf(double **H, double **W, int n, int k, int max_iter, double epsilon) 
                 diff += delta * delta;
             }
         }
-        if (diff < epsilon) {
-            break;
-        }
+        if (diff < epsilon) break;
     }
-
-    /* Free temporary matrices */
     for (i = 0; i < n; i++) {
-        free(WH[i]);
-        free(numerator[i]);
-        free(denominator[i]);
-        free(H_prev[i]);
+        free(WH[i]); free(numerator[i]); free(denominator[i]); free(H_prev[i]);
     }
-    for (i = 0; i < k; i++) {
-        free(HTH[i]);
-    }
-    free(WH);
-    free(numerator);
-    free(denominator);
-    free(H_prev);
-    free(HTH);
+    for (i = 0; i < k; i++) free(HTH[i]);
+    free(WH); free(numerator); free(denominator); free(H_prev); free(HTH);
 }
 
 /* Declare function prototypes (implementations to be added) */

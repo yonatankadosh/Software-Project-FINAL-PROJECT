@@ -11,35 +11,23 @@ def euclidean_distance(point1, point2):
     return np.sqrt(np.sum((point1 - point2) ** 2))
 
 def silhouette_score_manual(X, labels):
-    """
-    Calculate silhouette score manually.
-    
-    Silhouette coefficient = (b - a) / max(a, b)
-    Where:
-    - a = mean distance between point and all other points in same cluster
-    - b = minimum mean distance between point and all points in other clusters
-    """
+    """Calculate silhouette score: (b-a)/max(a,b) where a=intra-cluster, b=inter-cluster distance"""
     n_samples = X.shape[0]
     unique_labels = np.unique(labels)
     n_clusters = len(unique_labels)
-    
     if n_clusters < 2:
         return 0.0
-    
     silhouette_scores = []
-    
     for i in range(n_samples):
         point = X[i]
         cluster_label = labels[i]
-        
         # Calculate a: mean distance to points in same cluster
         same_cluster_points = X[labels == cluster_label]
-        if len(same_cluster_points) == 1:  # Only this point in cluster
+        if len(same_cluster_points) == 1:
             a = 0.0
         else:
             distances = [euclidean_distance(point, other_point) for other_point in same_cluster_points if not np.array_equal(point, other_point)]
             a = np.mean(distances) if distances else 0.0
-        
         # Calculate b: minimum mean distance to points in other clusters
         b_values = []
         for other_label in unique_labels:
@@ -47,21 +35,16 @@ def silhouette_score_manual(X, labels):
                 other_cluster_points = X[labels == other_label]
                 distances = [euclidean_distance(point, other_point) for other_point in other_cluster_points]
                 b_values.append(np.mean(distances))
-        
-        if not b_values:  # Only one cluster
+        if not b_values:
             b = 0.0
         else:
             b = min(b_values)
-        
         # Calculate silhouette coefficient for this point
         if max(a, b) == 0:
             silhouette_coef = 0.0
         else:
             silhouette_coef = (b - a) / max(a, b)
-        
         silhouette_scores.append(silhouette_coef)
-    
-    # Return mean silhouette score
     return np.mean(silhouette_scores)
 
 def get_symnmf_clusters(X, k):

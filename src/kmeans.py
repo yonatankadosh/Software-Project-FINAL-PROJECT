@@ -116,62 +116,25 @@ def is_valid_iter(max_iter):
 def main():
     try:
         args = sys.argv
-        if len(args) not in [2, 3]:
-            print("An Error Has Occurred")
-            sys.exit(1)
-
-        try:
-            k_float = float(args[1])
-        except ValueError:
-            print("Incorrect number of clusters!")
-            sys.exit(1)
-
-        if not k_float.is_integer():
-            print("Incorrect number of clusters!")
-            sys.exit(1)
-
+        if len(args) not in [2, 3]: print("An Error Has Occurred"); sys.exit(1)
+        try: k_float = float(args[1])
+        except ValueError: print("Incorrect number of clusters!"); sys.exit(1)
+        if not k_float.is_integer(): print("Incorrect number of clusters!"); sys.exit(1)
         k = int(k_float)
-
         if len(args) == 3:
-            try:
-                iter_float = float(args[2])
-            except ValueError:
-                print("Incorrect maximum iteration!")
-                sys.exit(1)
-
-            if not iter_float.is_integer():
-                print("Incorrect maximum iteration!")
-                sys.exit(1)
-
+            try: iter_float = float(args[2])
+            except ValueError: print("Incorrect maximum iteration!"); sys.exit(1)
+            if not iter_float.is_integer(): print("Incorrect maximum iteration!"); sys.exit(1)
             max_iter = int(iter_float)
-        else:
-            max_iter = 400
-
-        if sys.stdin.isatty():
-            print("An Error Has Occurred")
-            sys.exit(1)
-            return
-
+        else: max_iter = 400
+        if sys.stdin.isatty(): print("An Error Has Occurred"); sys.exit(1)
         vectors = read_vectors_from_stdin()
         N = len(vectors)
-
-        if not is_valid_k(k, N):
-            print("Incorrect number of clusters!")
-            sys.exit(1)
-            return
-
-        if not is_valid_iter(max_iter):
-            print("Incorrect maximum iteration!")
-            sys.exit(1)
-            return
-
+        if not is_valid_k(k, N): print("Incorrect number of clusters!"); sys.exit(1)
+        if not is_valid_iter(max_iter): print("Incorrect maximum iteration!"); sys.exit(1)
         centroids = k_means(vectors, k, max_iter)
-        for line in format_output(centroids):
-            print(line)
-
-    except Exception:
-        print("An Error Has Occurred")
-        sys.exit(1)
+        for line in format_output(centroids): print(line)
+    except Exception: print("An Error Has Occurred"); sys.exit(1)
 
 if __name__ == "__main__":
     main()
