@@ -8,13 +8,18 @@ def print_matrix(matrix):
     for row in matrix:
         print(','.join(f"{val:.4f}" for val in row))
 
+def init_H(W, k):
+    """Initialize H matrix for SymNMF"""
+    return np.random.uniform(0, 2 * np.sqrt(1 / k), (W.shape[0], k))
+
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: python3 symnmf.py <goal> <input_file> [<k> if goal is symnmf]")
+    if len(sys.argv) < 4:
+        print("Usage: python3 symnmf.py <k> <goal> <input_file>")
         return
 
-    goal = sys.argv[1]
-    input_file = sys.argv[2]
+    k = int(sys.argv[1])
+    goal = sys.argv[2]
+    input_file = sys.argv[3]
 
     try:
         X = np.loadtxt(input_file, delimiter=',')
@@ -38,15 +43,11 @@ def main():
         print_matrix(W)
 
     elif goal == "symnmf":
-        if len(sys.argv) < 4:
-            print("Usage for symnmf: python3 symnmf.py symnmf <input_file> <k>")
-            return
-        k = int(sys.argv[3])
         A = symnmf.compute_similarity_matrix(X)
         D = symnmf.compute_diagonal_degree_matrix(A)
         W = symnmf.compute_normalized_similarity_matrix(A, D)
 
-        H_init = np.random.uniform(0, 2 * np.sqrt(1 / k), (X.shape[0], k))
+        H_init = init_H(W, k)
         H_final = symnmf.symnmf(W, H_init, 300, 1e-4)
         print_matrix(H_final)
 

@@ -173,7 +173,7 @@ void update_H(double **H, double **WH, double **denominator, int n, int k, doubl
     for (i = 0; i < n; i++) {
         for (j = 0; j < k; j++) {
             if (denominator[i][j] != 0.0) {
-                H[i][j] *= pow(WH[i][j] / denominator[i][j], beta);
+                H[i][j] = H[i][j] * (1 - beta + beta * (WH[i][j] / denominator[i][j]));
             }
         }
     }
@@ -185,7 +185,8 @@ void symnmf(double **H, double **W, int n, int k, int max_iter, double epsilon) 
     double **HTH = (double **)malloc(k * sizeof(double *));
     double **numerator = (double **)malloc(n * sizeof(double *));
     double **denominator = (double **)malloc(n * sizeof(double *));
-    int i;
+    double **H_prev = (double **)malloc(n * sizeof(double *));
+    int i, j;
     int iter;
     double diff = 0.0;
 
@@ -193,18 +194,33 @@ void symnmf(double **H, double **W, int n, int k, int max_iter, double epsilon) 
         WH[i] = (double *)calloc(k, sizeof(double));
         numerator[i] = (double *)calloc(k, sizeof(double));
         denominator[i] = (double *)calloc(k, sizeof(double));
+        H_prev[i] = (double *)calloc(k, sizeof(double));
     }
     for (i = 0; i < k; i++) {
         HTH[i] = (double *)calloc(k, sizeof(double));
     }
 
     for (iter = 0; iter < max_iter; iter++) {
+        /* Store previous H for convergence check */
+        for (i = 0; i < n; i++) {
+            for (j = 0; j < k; j++) {
+                H_prev[i][j] = H[i][j];
+            }
+        }
+        
         compute_WH(W, H, n, k, WH);
         compute_HTH(H, n, k, HTH);
         compute_denominator(H, HTH, n, k, denominator);
         update_H(H, WH, denominator, n, k, beta);
-        /* Convergence check */
-        diff = compute_convergence_diff(H, WH, denominator, n, k, beta);
+        
+        /* Simple Frobenius norm convergence check like Yahel's reference */
+        diff = 0.0;
+        for (i = 0; i < n; i++) {
+            for (j = 0; j < k; j++) {
+                double delta = H[i][j] - H_prev[i][j];
+                diff += delta * delta;
+            }
+        }
         if (diff < epsilon) {
             break;
         }
@@ -215,6 +231,7 @@ void symnmf(double **H, double **W, int n, int k, int max_iter, double epsilon) 
         free(WH[i]);
         free(numerator[i]);
         free(denominator[i]);
+        free(H_prev[i]);
     }
     for (i = 0; i < k; i++) {
         free(HTH[i]);
@@ -222,6 +239,7 @@ void symnmf(double **H, double **W, int n, int k, int max_iter, double epsilon) 
     free(WH);
     free(numerator);
     free(denominator);
+    free(H_prev);
     free(HTH);
 }
 
